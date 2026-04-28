@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Générateur Blog SEO – Matcha & Pilates</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; background: #f9f5f0; }
+  h1 { color: #5a3e2b; text-align: center; }
+  label { font-weight: bold; display: block; margin-top: 20px; color: #5a3e2b; }
+  input, select, textarea { width: 100%; padding: 10px; margin-top: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; }
+  button { background: #5a3e2b; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 16px; cursor: pointer; margin-top: 20px; width: 100%; }
+  button:hover { background: #7a5e4b; }
+  #result { margin-top: 30px; background: white; padding: 20px; border-radius: 8px; white-space: pre-wrap; line-height: 1.8; border: 1px solid #ddd; display: none; }
+  #copy-btn { background: #2ecc71; display: none; }
+  #loading { text-align: center; display: none; color: #5a3e2b; font-size: 18px; margin-top: 20px; }
+  .badge { background: #5a3e2b; color: white; padding: 3px 10px; border-radius: 20px; font-size: 12px; }
+</style>
+</head>
+<body>
+<h1>🍵 Générateur d'Articles SEO</h1>
+<p style="text-align:center;color:#888">Matcha & Pilates — Créez des articles optimisés Google en 1 clic</p>
+
+<label>Sujet de l'article</label>
+<input type="text" id="sujet" placeholder="ex: bienfaits du matcha pour le pilates" />
+
+<label>Produit à mettre en avant (optionnel)</label>
+<input type="text" id="produit" placeholder="ex: Matcha Bloom Bio" />
+
+<label>Longueur de l'article</label>
+<select id="longueur">
+  <option value="court">Court (400 mots) — idéal pour commencer</option>
+  <option value="moyen" selected>Moyen (700 mots) — recommandé SEO</option>
+  <option value="long">Long (1200 mots) — maximum SEO</option>
+</select>
+
+<button onclick="generer()">✨ Générer l'article SEO</button>
+
+<div id="loading">⏳ Claude rédige votre article... (30 secondes)</div>
+
+<div id="result"></div>
+<button id="copy-btn" onclick="copier()">📋 Copier l'article</button>
+
+<script>
+async function generer() {
+  const sujet = document.getElementById('sujet').value;
+  const produit = document.getElementById('produit').value;
+  const longueur = document.getElementById('longueur').value;
+
+  if (!sujet) { alert('Entrez un sujet !'); return; }
+
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('copy-btn').style.display = 'none';
+
+  const mots = longueur === 'court' ? 400 : longueur === 'moyen' ? 700 : 1200;
+
+  const systemPrompt = `Tu es un expert SEO et rédacteur pour la boutique bien-être française Matcha & Pilates (matchandpilates.com). 
+Tu rédiges des articles de blog optimisés Google, en français, avec un ton doux, inspirant et lifestyle. 
+La marque vend : matcha bio japonais, rituels de bain, shower steamers, bougies, accessoires pilates.
+Chaque article doit : avoir un titre H1 accrocheur, une introduction engageante, des sous-titres H2, une conclusion avec call-to-action vers la boutique.`;
+
+  const userPrompt = `Rédige un article de blog SEO de ${mots} mots sur le sujet : "${sujet}".
+${produit ? `Mentionne naturellement le produit "${produit}" de la boutique.` : ''}
+Format : titre H1, introduction, 3-4 sections avec sous-titres H2, conclusion avec lien vers matchandpilates.com.
+Inclus des mots-clés SEO naturellement dans le texte.`;
+
+  try {
+    const response = await fetch('/api/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }]
+      })
+    });
+
+    const data = await response.json();
+    const texte = data.content[0].text;
+
+    document.getElementById('result').style.display = 'block';
+    document.getElementById('result').innerText = texte;
+    document.getElementById('copy-btn').style.display = 'block';
+  } catch(e) {
+    alert('Erreur : ' + e.message);
+  }
+
+  document.getElementById('loading').style.display = 'none';
+}
+
+function copier() {
+  const texte = document.getElementById('result').innerText;
+  navigator.clipboard.writeText(texte);
+  document.getElementById('copy-btn').innerText = '✅ Copié !';
+  setTimeout(() => document.getElementById('copy-btn').innerText = '📋 Copier l\'article', 2000);
+}
+</script>
+</body>
+</html>
